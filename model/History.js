@@ -5,6 +5,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    name:{
+        type:String
+    },
+    mobile:{
+        type:String
+    },
     amount:{
         type: Number,
         required: true

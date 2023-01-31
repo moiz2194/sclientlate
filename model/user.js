@@ -8,6 +8,9 @@ const userSchema = new mongoose.Schema({
     mobile: {
         type: Number
     },
+    password:{
+   type:String
+    },
     role:{
         type:String,
         default:"user"
@@ -15,6 +18,12 @@ const userSchema = new mongoose.Schema({
     balance:{
         type:Number,
         default:0
+    },
+    api_key:{
+        type:String,
+    },
+    api_id:{
+        type:String,
     }
 });
 const model = mongoose.model("alluser", userSchema)

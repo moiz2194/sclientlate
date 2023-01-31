@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
+    title:{
+        type: String
+    },
     url: {
-        type: String,
-        required: true
+        type: String
     },
     category:{
      type: String,

@@ -15,6 +15,7 @@ const History = require('../model/History.js')
 
 router.post('/addstream', asyncerror(async (req, res, next) => {
     //create question
+    console.log(req.body.questions)
     const question = await Question.create(req.body.questions)
     // console.log(question)
     const category=await Category.findById(req.body.category)
@@ -22,6 +23,7 @@ router.post('/addstream', asyncerror(async (req, res, next) => {
         folder: "thumbnails"
     })
     const stream = await Stream.create({
+        title:req.body.title,
         url: req.body.url, question_id: question._id, thumbnail: {
             public_id: result.public_id, url: result.url
         },category:category.name,category_id:category._id
@@ -33,15 +35,15 @@ router.post('/addstream', asyncerror(async (req, res, next) => {
 
 router.get('/allwithdrawspending', asyncerror(async (req, res, next) => {
     
-    const withdraws = await History.find({status:"complete",type:"withdraw"})
+    const withdraws = await History.find({status:"pending",type:"withdraw"})
    
 
     res.status(200).send({ success: true, withdraws })
 
 }))
-router.get('/allwithdraws', asyncerror(async (req, res, next) => {
+router.get('/allhistory', asyncerror(async (req, res, next) => {
     
-    const withdraws = await History.find({type:"withdraw"})
+    const withdraws = await History.find()
    
 
     res.status(200).send({ success: true, withdraws })
@@ -64,6 +66,15 @@ router.post('/rejectwithdraw', asyncerror(async (req, res, next) => {
    
 
     res.status(200).send({ success: true, withdraw })
+
+}))
+router.post('/addurl', asyncerror(async (req, res, next) => {
+    const stream = await Stream.findByIdAndUpdate(req.body.id,{
+        url:req.body.url
+    })
+   
+
+    res.status(200).send({ success: true, stream })
 
 }))
 router.post('/addcategory', asyncerror(async (req, res, next) => {
@@ -116,6 +127,7 @@ router.post('/endstream', asyncerror(async (req, res, next) => {
 
 router.post('/paywinners', asyncerror(async (req, res, next) => {
     //create question
+    const stream_id=req.body.stream_id
     const winners = req.body.winners;
     const reward = req.body.reward;
     const updatebalance =asyncerror( async (userid, balance) => {
@@ -134,10 +146,36 @@ router.post('/paywinners', asyncerror(async (req, res, next) => {
         totalprice += percent
         updatebalance(elem.user_id, totalprice)
     }
-
+   await Stream.findByIdAndDelete(stream_id)
     res.status(200).send({ success: true })
 
 }))
+
+router.post('/changeapikey',verifyToken,isadmin,asyncerror(async(req,res,next)=>{
+    await User.findByIdAndUpdate(req._id,{
+     api_key:req.body.api_key,
+     api_id:req.body.api_id,
+    })
+    res.status(200).send({success:true})
+}))
+
+router.post('/login',asyncerror(async(req,res,next)=>{
+    console.log(req.body)
+   const user=await User.findOne({mobile:req.body.mobile})
+   if(!user){
+    return next (new ErrorHandler('No user found',404))
+   }
+   if(user.role!=='admin'){
+    return next (new ErrorHandler('Not allowed',405))
+   }
+   if(user.password!==req.body.password){
+    console.log(user.password)
+    return next (new ErrorHandler('Wrong credentials',405))
+   }
+   const token=jwt.sign({id:user._id},'moiz2194')
+    res.status(200).send({success:true,token})
+}))
+
 
 
 
