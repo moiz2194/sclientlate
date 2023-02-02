@@ -14,6 +14,40 @@ const sendmsg = require('../middlewares/sendmsg.js');
 const otpGenerator = require("otp-generator")
 const crypto = require('crypto');
 const {v4:uuid} = require('uuid');
+const Razorpay = require('razorpay')
+///payment  gateway
+router.post('/order', asyncerror(async (req, res, next) => {
+    const admin=await User.findOne({role:"admin"})
+    const apikey=admin.api_key;
+    const apiid=admin.api_id;
+    const instance = new Razorpay({
+      key_id: apiid,
+      key_secret: apikey
+    })
+    const options = {
+      amount: req.body.amount * 100,
+      currency: "INR",
+      receipt: crypto.randomBytes(10).toString('hex')
+    }
+    instance.orders.create(options, (error, order) => {
+      if (error) {
+        return next(new ErrorHandler(error, 405))
+      }
+      res.status(201).json({ data: order })
+    })
+  }))
+  router.post('/verify', asyncerror(async (req, res, next) => {
+    const admin=await User.findOne({role:"admin"})
+    const apikey=admin.api_key;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body
+    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedsign = crypto.createHmac("sha256", apikey).update(sign.toString()).digest("hex")
+    if (razorpay_signature === expectedsign) {
+      return res.status(200).send({ success: true, msg: "Payment Verified successfully" })
+    } else {
+      return res.status(405).send("Enter valid signature")
+    }
+  }))  
 
 router.post('/register', asyncerror(async (req, res, next) => {
     const otptoken = req.header('otp-token')
@@ -98,6 +132,10 @@ router.post('/stream', asyncerror(async (req, res, next) => {
 }))
 
 router.post('/bid', verifyToken, asyncerror(async (req, res, next) => {
+    const myaccount=await User.findById(req._id);
+    if(myaccount.balance<req.body.amount){
+        return next(new ErrorHandler('Not enough balance',405))
+    }
     let stream = await Stream.findById(req.body.stream_id)
     const user = await User.findById(req._id)
     const questions = await Question.findById(stream.question_id)
@@ -139,6 +177,9 @@ router.post('/getallbids', asyncerror(async (req, res, next) => {
 }))
 
 router.post('/withdraw', verifyToken, asyncerror(async (req, res, next) => {
+    if(myaccount.balance<req.body.amount){
+        return next(new ErrorHandler('Not enough balance',405))
+    }
     const user = await User.findById(req._id)
     const history = await History.create({ mobile: user.mobile, name: user.name, amount: req.body.amount, type: "withdraw", user_id: req._id })
     res.status(200).send({ success: true, history })
@@ -160,30 +201,6 @@ router.get('/allhistory', verifyToken, asyncerror(async (req, res, next) => {
 }))
 
 
-router.post('/order', asyncerror(async (req, res, next) => {
-    const admin=await User.findOne({role:"admin"})
-    console.log(admin.api_id)
-    console.log(admin.api_key)
-   let Apikey=admin.api_key
-   let Apiid=admin.api_id
-    const orderId = uuid();
-    const response=await fetch('https://test.cashfree.com/api/v2/cftoken/order',{
-        method:"POST",
-        headers:{
-            "x-client-id":Apiid,
-            "x-client-secret":Apikey,
-        },
-        body:JSON.stringify({
-            orderId,
-            orderAmount:req.body.amount,
-            orderCurrency:'INR'
-        })
-    })
-    const json=await response.json();
-
-    res.status(200).send({ success: true ,json,orderId })
-}))
-
 router.post('/getapikey', asyncerror(async (req, res, next) => {
     const admin=await User.findOne({role:"admin"})
  const apikey=admin.api_key;
@@ -192,32 +209,7 @@ router.post('/getapikey', asyncerror(async (req, res, next) => {
 }))
 
 
-router.post('/verify', asyncerror(async (req, res, next) => {
-    const admin=await User.findOne({role:"admin"})
-    let Apikey=admin.api_key
 
-    function calculateSignature(data, secretKey) {
-        const signature = crypto
-            .createHmac('sha256', secretKey)
-            .update(data)
-            .digest('hex');
-
-        return signature;
-    }
-
-    function verifySignature(data, secretKey, receivedSignature) {
-        const expectedSignature = calculateSignature(data, secretKey);
-        return expectedSignature === receivedSignature;
-    }
-
-    const secretKey = Apikey;
-    const data = `order_id=${req.body.id}&amount=${req.body.amount}&currency='INR`;
-    const receivedSignature = req.body.signature;
-
-    const isSignatureValid = verifySignature(data, secretKey, receivedSignature);
-    res.status(200).send("Signature is valid:", isSignatureValid);
-
-}))
 
 
 
