@@ -144,6 +144,10 @@ router.post('/bid', verifyToken, asyncerror(async (req, res, next) => {
         question_id: questions._id, user_id: req._id, amount: req.body.amount, answer_id: req.body.answer_id,
         answer: req.body.answer
     })
+    const newbalance=user.balance-bid.amount
+    await User.findByIdAndUpdate(user._id,{
+        balance:newbalance
+    })
     res.status(200).send({ success: true, bid })
 
 }))
@@ -177,11 +181,15 @@ router.post('/getallbids', asyncerror(async (req, res, next) => {
 }))
 
 router.post('/withdraw', verifyToken, asyncerror(async (req, res, next) => {
-    if(myaccount.balance<req.body.amount){
+    const user = await User.findById(req._id)
+    if(user.balance<req.body.amount){
         return next(new ErrorHandler('Not enough balance',405))
     }
-    const user = await User.findById(req._id)
     const history = await History.create({ mobile: user.mobile, name: user.name, amount: req.body.amount, type: "withdraw", user_id: req._id })
+    let newbalance = user.balance - history.amount
+    await User.findByIdAndUpdate(user._id,{
+        balance:newbalance
+    })
     res.status(200).send({ success: true, history })
 }))
 router.post('/deposit', verifyToken, asyncerror(async (req, res, next) => {
