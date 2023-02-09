@@ -68,6 +68,11 @@ router.post('/giftstreamer',verifyToken, asyncerror(async (req, res, next) => {
     })
     res.status(200).send({ success: true, token })
 }))
+router.post('/streamerbyid',verifyToken, asyncerror(async (req, res, next) => {
+    const streamer_id=req.body.streamer_id;
+    const streamer=await Streamer.findById(streamer_id)
+    res.status(200).send({ success: true, streamer })
+}))
 // 4 ALl streamers 
 router.get('/allstreamer', asyncerror(async (req, res, next) => {
     const streamers = await Streamer.find().sort({rank:-1})
@@ -185,9 +190,14 @@ router.get('/nowstreams', asyncerror(async (req, res, next) => {
 }))
 router.post('/questionbyid', asyncerror(async (req, res, next) => {
     const id = req.body.id
-    let question = await Question.findById(id)
+    let stream = await Stream.findById(id);
+    const questions=[]
+    for (const elem of stream.question_id) {
+        const thisquestion=await Question.findById(elem)
+        questions.push(thisquestion)
+    }
 
-    res.status(200).send({ success: true, question })
+    res.status(200).send({ success: true, questions })
 
 }))
 router.post('/streambycategory', asyncerror(async (req, res, next) => {

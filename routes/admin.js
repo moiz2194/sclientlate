@@ -37,6 +37,20 @@ router.post('/sendnotification',verifyToken,isadmin, asyncerror(async (req, res,
     res.status(200).send({ success: true })
 
 }))
+// Update question
+router.post('/addquestion',verifyToken,isadmin, asyncerror(async (req, res, next) => {
+    const question=await Question.create(req.body.questions);
+    const stream=await Stream.findById(req.body.stream_id)
+    let newquestions=stream.question_id
+    newquestions.push(question._id)
+
+    await Stream.findByIdAndUpdate(req.body.stream_id,{
+        question_id:newquestions
+    })
+
+    res.status(200).send({ success: true })
+
+}))
 // Add Banners
 router.post('/addbanner',verifyToken,isadmin, asyncerror(async (req, res, next) => {
     const result=await cloudinary.v2.uploader.upload(req.body.image,{
@@ -61,7 +75,7 @@ router.post('/delbanner',verifyToken,isadmin, asyncerror(async (req, res, next) 
 
 //Add streamer
 router.post('/addstreamer',verifyToken,isadmin, asyncerror(async (req, res, next) => {
-    const result=await cloudinary.v2.uploader.upload(req.body.profile,{
+    const result=await cloudinary.v2.uploader.upload(req.body.image,{
         folder:"Streamers"
     })
     const streamer = await Streamer.create({
@@ -73,9 +87,7 @@ router.post('/addstreamer',verifyToken,isadmin, asyncerror(async (req, res, next
 
 }))
 router.post('/delstreamer',verifyToken,isadmin, asyncerror(async (req, res, next) => {
-    const result=await cloudinary.v2.uploader.destroy(req.body.public_id,{
-        folder:"Streamers"
-    })
+    const result=await cloudinary.v2.uploader.destroy(req.body.public_id)
     const streamer = await Streamer.findByIdAndDelete(req.body.id)
     res.status(200).send({ success: true, streamer })
 
@@ -84,7 +96,6 @@ router.post('/delstreamer',verifyToken,isadmin, asyncerror(async (req, res, next
 ///
 router.post('/addstream', asyncerror(async (req, res, next) => {
     //create question
-    console.log(req.body.questions)
     const question = await Question.create(req.body.questions)
     // console.log(question)
     const category = await Category.findById(req.body.category)
@@ -94,7 +105,7 @@ router.post('/addstream', asyncerror(async (req, res, next) => {
     const stream = await Stream.create({
         title: req.body.title,
         url: req.body.url,
-        question_id: question._id,
+        question_id: [question._id],
         thumbnail:  {
             public_id: result.public_id,
             url: result.url
