@@ -11,22 +11,98 @@ const Bids = require('../model/bids.js')
 const { verifyToken, isadmin } = require('../middlewares/verifyauth.js');
 const cloudinary = require('cloudinary')
 const History = require('../model/History.js')
+const Streamer = require('../model/streamers.js')
+const Banner = require('../model/banners.js');
+const sendnotification = require('../middlewares/Sendnotification.js');
 
+// Add Banners
+router.post('/addbanner',verifyToken,isadmin, asyncerror(async (req, res, next) => {
+    const result=await cloudinary.v2.uploader.upload(req.body.image,{
+        folder:"Banner"
+    })
+    const banner = await Banner.create({
+        link:req.body.link,
+        url:result.url,
+        public_id:result.public_id,
+    })
+    res.status(200).send({ success: true, banner })
 
+}))
+// Send notification
+router.post('/sendnotification',verifyToken,isadmin, asyncerror(async (req, res, next) => {
+    const result=await cloudinary.v2.uploader.upload(req.body.image,{
+        folder:"notification"
+    })
+   sendnotification('',req.body.message,'all',result.public_id,result.url)
+    res.status(200).send({ success: true })
+
+}))
+// Add Banners
+router.post('/addbanner',verifyToken,isadmin, asyncerror(async (req, res, next) => {
+    const result=await cloudinary.v2.uploader.upload(req.body.image,{
+        folder:"Banner"
+    })
+    const banner = await Banner.create({
+        link:req.body.link,
+        url:result.url,
+        public_id:result.public_id,
+    })
+    res.status(200).send({ success: true, banner })
+
+}))
+router.post('/delbanner',verifyToken,isadmin, asyncerror(async (req, res, next) => {
+    const result=await cloudinary.v2.uploader.destroy(req.body.public_id,{
+        folder:"Banner"
+    })
+    const banner = await Banner.findByIdAndDelete(req.body.id)
+    res.status(200).send({ success: true, banner })
+
+}))
+
+//Add streamer
+router.post('/addstreamer',verifyToken,isadmin, asyncerror(async (req, res, next) => {
+    const result=await cloudinary.v2.uploader.upload(req.body.profile,{
+        folder:"Streamers"
+    })
+    const streamer = await Streamer.create({
+        name:req.body.name,
+        url:result.url,
+        public_id:result.public_id,
+    })
+    res.status(200).send({ success: true, streamer })
+
+}))
+router.post('/delstreamer',verifyToken,isadmin, asyncerror(async (req, res, next) => {
+    const result=await cloudinary.v2.uploader.destroy(req.body.public_id,{
+        folder:"Streamers"
+    })
+    const streamer = await Streamer.findByIdAndDelete(req.body.id)
+    res.status(200).send({ success: true, streamer })
+
+}))
+
+///
 router.post('/addstream', asyncerror(async (req, res, next) => {
     //create question
     console.log(req.body.questions)
     const question = await Question.create(req.body.questions)
     // console.log(question)
-    const category=await Category.findById(req.body.category)
+    const category = await Category.findById(req.body.category)
     const result = await cloudinary.v2.uploader.upload(req.body.thumbnail, {
         folder: "thumbnails"
     })
     const stream = await Stream.create({
-        title:req.body.title,
-        url: req.body.url, question_id: question._id, thumbnail: {
-            public_id: result.public_id, url: result.url
-        },category:category.name,category_id:category._id
+        title: req.body.title,
+        url: req.body.url,
+        question_id: question._id,
+        thumbnail:  {
+            public_id: result.public_id,
+            url: result.url
+        },
+        category: category.name,
+        category_id: category._id,
+        streamer_id: req.body.streamer_id,
+        streamer_name: req.body.streamer_name
     })
 
     res.status(200).send({ success: true, stream })
@@ -34,45 +110,45 @@ router.post('/addstream', asyncerror(async (req, res, next) => {
 }))
 
 router.get('/allwithdrawspending', asyncerror(async (req, res, next) => {
-    
-    const withdraws = await History.find({status:"pending",type:"withdraw"})
-   
+
+    const withdraws = await History.find({ status: "pending", type: "withdraw" })
+
 
     res.status(200).send({ success: true, withdraws })
 
 }))
 router.get('/allhistory', asyncerror(async (req, res, next) => {
-    
+
     const withdraws = await History.find()
-   
+
 
     res.status(200).send({ success: true, withdraws })
 
 }))
 router.post('/completewithdraw', asyncerror(async (req, res, next) => {
-    
-    const withdraw = await History.findByIdAndUpdate(req.body.id,{
-        status:"complete"
+
+    const withdraw = await History.findByIdAndUpdate(req.body.id, {
+        status: "complete"
     })
-   
+
 
     res.status(200).send({ success: true, withdraw })
 
 }))
 router.post('/rejectwithdraw', asyncerror(async (req, res, next) => {
-    const withdraw = await History.findByIdAndUpdate(req.body.id,{
-        status:"reject"
+    const withdraw = await History.findByIdAndUpdate(req.body.id, {
+        status: "reject"
     })
-   
+
 
     res.status(200).send({ success: true, withdraw })
 
 }))
 router.post('/addurl', asyncerror(async (req, res, next) => {
-    const stream = await Stream.findByIdAndUpdate(req.body.id,{
-        url:req.body.url
+    const stream = await Stream.findByIdAndUpdate(req.body.id, {
+        url: req.body.url
     })
-   
+
 
     res.status(200).send({ success: true, stream })
 
@@ -83,7 +159,7 @@ router.post('/addcategory', asyncerror(async (req, res, next) => {
     })
     console.log(result)
     const stream = await Category.create({
-       name:req.body.name,image:{url:result.url,public_id:result.public_id}
+        name: req.body.name, image: { url: result.url, public_id: result.public_id }
     })
     console.log(stream)
 
@@ -91,15 +167,15 @@ router.post('/addcategory', asyncerror(async (req, res, next) => {
 
 }))
 router.post('/delcategory', asyncerror(async (req, res, next) => {
-    const category=await Category.findById(req.body.id)
+    const category = await Category.findById(req.body.id)
     await cloudinary.v2.uploader.destroy(category.image.public_id)
     await Category.findByIdAndDelete(req.body.id)
     res.status(200).send({ success: true })
 
 }))
 router.get('/allcategory', asyncerror(async (req, res, next) => {
-    const category=await Category.find()
-    res.status(200).send({ success: true ,category})
+    const category = await Category.find()
+    res.status(200).send({ success: true, category })
 
 }))
 
@@ -127,18 +203,18 @@ router.post('/endstream', asyncerror(async (req, res, next) => {
 
 router.post('/paywinners', asyncerror(async (req, res, next) => {
     //create question
-    const stream_id=req.body.stream_id
+    const stream_id = req.body.stream_id
     const winners = req.body.winners;
     const reward = req.body.reward;
-    const updatebalance =asyncerror( async (userid, balance) => {
+    const updatebalance = asyncerror(async (userid, balance) => {
         const user = await User.findById(userid);
         // console.log(user)
-        if(user!==null){
-        let newbalance=user?.balance+balance;
-        await User.findByIdAndUpdate(userid,{
-            balance:newbalance
-        })
-    }
+        if (user !== null) {
+            let newbalance = user?.balance + balance;
+            await User.findByIdAndUpdate(userid, {
+                balance: newbalance
+            })
+        }
     })
     for (const elem of winners) {
         let totalprice = elem.amount;
@@ -146,34 +222,34 @@ router.post('/paywinners', asyncerror(async (req, res, next) => {
         totalprice += percent
         updatebalance(elem.user_id, totalprice)
     }
-   await Stream.findByIdAndDelete(stream_id)
+    await Stream.findByIdAndDelete(stream_id)
     res.status(200).send({ success: true })
 
 }))
 
-router.post('/changeapikey',verifyToken,isadmin,asyncerror(async(req,res,next)=>{
-    await User.findByIdAndUpdate(req._id,{
-     api_key:req.body.api_key,
-     api_id:req.body.api_id,
+router.post('/changeapikey', verifyToken, isadmin, asyncerror(async (req, res, next) => {
+    await User.findByIdAndUpdate(req._id, {
+        api_key: req.body.api_key,
+        api_id: req.body.api_id,
     })
-    res.status(200).send({success:true})
+    res.status(200).send({ success: true })
 }))
 
-router.post('/login',asyncerror(async(req,res,next)=>{
+router.post('/login', asyncerror(async (req, res, next) => {
     console.log(req.body)
-   const user=await User.findOne({mobile:req.body.mobile})
-   if(!user){
-    return next (new ErrorHandler('No user found',404))
-   }
-   if(user.role!=='admin'){
-    return next (new ErrorHandler('Not allowed',405))
-   }
-   if(user.password!==req.body.password){
-    console.log(user.password)
-    return next (new ErrorHandler('Wrong credentials',405))
-   }
-   const token=jwt.sign({id:user._id},'moiz2194')
-    res.status(200).send({success:true,token})
+    const user = await User.findOne({ mobile: req.body.mobile })
+    if (!user) {
+        return next(new ErrorHandler('No user found', 404))
+    }
+    if (user.role !== 'admin') {
+        return next(new ErrorHandler('Not allowed', 405))
+    }
+    if (user.password !== req.body.password) {
+        console.log(user.password)
+        return next(new ErrorHandler('Wrong credentials', 405))
+    }
+    const token = jwt.sign({ id: user._id }, 'moiz2194')
+    res.status(200).send({ success: true, token })
 }))
 
 

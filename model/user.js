@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema({
     },
     api_id:{
         type:String,
+    },
+    rank:{
+        type:Number,
+        default:0
     }
 });
 const model = mongoose.model("alluser", userSchema)

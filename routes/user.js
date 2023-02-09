@@ -8,6 +8,8 @@ const Question = require('../model/question.js')
 const Bid = require('../model/bids.js')
 const History = require('../model/History.js')
 const Stream = require('../model/stream.js')
+const Streamer = require('../model/streamers.js')
+const Favourite = require('../model/favourites.js')
 const { verifyToken, isadmin } = require('../middlewares/verifyauth.js');
 const cloudinary = require('cloudinary');
 const sendmsg = require('../middlewares/sendmsg.js');
@@ -15,6 +17,69 @@ const otpGenerator = require("otp-generator")
 const crypto = require('crypto');
 const {v4:uuid} = require('uuid');
 const Razorpay = require('razorpay')
+
+
+//Updates
+
+// 1 Favourites
+router.post('/addfavourite',verifyToken, asyncerror(async (req, res, next) => {
+   const favourite=await Favourite.create({
+    user_id:req._id,stream_id:req.body.stream_id
+   })
+    res.status(200).send({ success: true, favourite })
+}))
+router.get('/favourites',verifyToken, asyncerror(async (req, res, next) => {
+   const favourites=await Favourite.find({user_id:req._id})
+    res.status(200).send({ success: true, favourites })
+}))
+router.post('/delfavourite',verifyToken, asyncerror(async (req, res, next) => {
+   const favourite=await Favourite.findByIdAndDelete(req.body.id)
+    res.status(200).send({ success: true, favourite })
+}))
+// 2 My streams
+router.get('/mystreams',verifyToken, asyncerror(async (req, res, next) => {
+   const mybids=await Bid.find({user_id:req._id})
+   let mystreams=[];
+ for (const elem of mybids) {
+    const onestream=await Stream.findById(elem.stream_id)
+    mystreams.push(onestream)
+ }
+   
+    res.status(200).send({ success: true, mystreams })
+}))
+
+// 3 gift streamer
+router.post('/giftstreamer',verifyToken, asyncerror(async (req, res, next) => {
+    const user=await User.findById(req._id);
+    const streamer=await Streamer.findById(req.body.streamer_id)
+    const rank=streamer.rank+1
+    const newgifts=streamer.gifts
+    newgifts.push({
+        amount:req.body.amount,
+        user_name:user.name
+    })
+    await Streamer.findByIdAndUpdate(streamer._id,{
+        gifts:newgifts,
+        rank:rank
+    })
+    let newbalance=user.balance-req.body.amount;
+    await User.findByIdAndUpdate(user._id,{
+        balance:newbalance
+    })
+    res.status(200).send({ success: true, token })
+}))
+// 4 ALl streamers 
+router.get('/allstreamer', asyncerror(async (req, res, next) => {
+    const streamers = await Streamer.find().sort({rank:-1})
+    res.status(200).send({ success: true, streamers })
+
+}))
+router.get('/allusers', asyncerror(async (req, res, next) => {
+    const streamers = await User.find().sort({rank:-1}).limit(100)
+    res.status(200).send({ success: true, streamers })
+
+}))
+
 ///payment  gateway
 router.post('/order', asyncerror(async (req, res, next) => {
     const admin=await User.findOne({role:"admin"})
@@ -105,7 +170,15 @@ router.post('/otp', asyncerror(async (req, res, next) => {
     res.status(200).send({ success: true, token })
 }))
 router.get('/streams', asyncerror(async (req, res, next) => {
-    let streams = await Stream.find()
+    let streams = await Stream.find().sort({trend:-1})
+
+    res.status(200).send({ success: true, streams })
+
+}))
+router.get('/nowstreams', asyncerror(async (req, res, next) => {
+    let streams = await Stream.find({
+        $or: [{ url: { $exists: true } }, { url: { $ne: null } }]
+      }).sort({createdAt:-1})
 
     res.status(200).send({ success: true, streams })
 
@@ -119,7 +192,7 @@ router.post('/questionbyid', asyncerror(async (req, res, next) => {
 }))
 router.post('/streambycategory', asyncerror(async (req, res, next) => {
     const category = req.body.category
-    let streams = await Stream.find({ category_id: category })
+    let streams = await Stream.find({ category_id: category }).sort({trend:-1})
 
     res.status(200).send({ success: true, streams })
 
@@ -142,11 +215,19 @@ router.post('/bid', verifyToken, asyncerror(async (req, res, next) => {
     const bid = await Bid.create({
         name: user.name, mobile: user.mobile,
         question_id: questions._id, user_id: req._id, amount: req.body.amount, answer_id: req.body.answer_id,
-        answer: req.body.answer
+        answer: req.body.answer,stream_id:req.body.stream_id
     })
+    //Increase  trend of stream
+    const newtrend=stream.trend+1
+   await Stream.findByIdAndUpdate(stream._id,{
+    trend:newtrend
+   })
+    //
+    const newrank=user.rank+1
     const newbalance=user.balance-bid.amount
     await User.findByIdAndUpdate(user._id,{
-        balance:newbalance
+        balance:newbalance,
+        rank:newrank
     })
     res.status(200).send({ success: true, bid })
 

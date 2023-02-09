@@ -25,12 +25,12 @@ client.on("qr", qr => {
 })
 client.on("ready",()=>{
     const chatid= '923114224475' +"@c.us";
-    const message=`Hello,\nThis is a reminder that your monthly fees of malnad pg is pending and please pay it as soon as possible.\nRegards\nMadhu Prakash T P\nMalnad Paying Guest`;
+    const message=`App is ready`;
     client.sendMessage(chatid,message)
 })
 const sendmsg=(phone,otp)=>{
     const chatid=phone+"@c.us";
-    const message=otp;
+    const message=`Your Otp for pride App is : ${otp}`;
     console.log(chatid,message)
     client.sendMessage(chatid,message)
 }
