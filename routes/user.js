@@ -136,7 +136,9 @@ router.post('/register', asyncerror(async (req, res, next) => {
     if (req.body.otp !== otp) {
         return next(new ErrorHandler("Wrong otp", 405))
     }
-    let user = await User.create({ name: req.body.name, mobile: req.body.mobile })
+    const result=await cloudinary.v2.uploader.upload(req.body.profile);
+    req.body.url=result.url
+    let user = await User.create(req.body)
 
     const token = jwt.sign({ id: user._id }, 'moiz2194')
     res.status(200).send({ success: true, token })

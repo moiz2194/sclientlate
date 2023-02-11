@@ -10,8 +10,6 @@ async function initializeStripe() {
   return stripe;
 }
 
-
-
 const bodyParser = require('body-parser')
 const cloudinary = require('cloudinary')
 const errorMiddleware = require('./middlewares/error.js')
