@@ -17,7 +17,7 @@ const otpGenerator = require("otp-generator")
 const crypto = require('crypto');
 const {v4:uuid} = require('uuid');
 const Razorpay = require('razorpay')
-
+const Banner = require('../model/banners.js');
 
 //Updates
 
@@ -27,6 +27,18 @@ router.post('/addfavourite',verifyToken, asyncerror(async (req, res, next) => {
     user_id:req._id,stream_id:req.body.stream_id
    })
     res.status(200).send({ success: true, favourite })
+}))
+router.get('/getbannermain',verifyToken, asyncerror(async (req, res, next) => {
+   const banner=await Banner.findOne({page:"main"})
+    res.status(200).send({ success: true, banner })
+}))
+router.get('/getbannersecond',verifyToken, asyncerror(async (req, res, next) => {
+   const banner=await Banner.findOne({page:"second"})
+    res.status(200).send({ success: true, banner })
+}))
+router.get('/getbannerthird',verifyToken, asyncerror(async (req, res, next) => {
+   const banner=await Banner.findOne({page:"third"})
+    res.status(200).send({ success: true, banner })
 }))
 router.get('/favourites',verifyToken, asyncerror(async (req, res, next) => {
    const favourites=await Favourite.find({user_id:req._id})

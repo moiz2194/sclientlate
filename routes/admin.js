@@ -15,20 +15,7 @@ const Streamer = require('../model/streamers.js')
 const Banner = require('../model/banners.js');
 const sendnotification = require('../middlewares/Sendnotification.js');
 
-// Add Banners
-router.post('/addbanner',verifyToken,isadmin, asyncerror(async (req, res, next) => {
-    const result=await cloudinary.v2.uploader.upload(req.body.image,{
-        folder:"Banner"
-    })
-    const banner = await Banner.create({
-        link:req.body.link,
-        url:result.url,
-        public_id:result.public_id,
-        page:req.body.page
-    })
-    res.status(200).send({ success: true, banner })
 
-}))
 // Send notification
 router.post('/sendnotification',verifyToken,isadmin, asyncerror(async (req, res, next) => {
     const result=await cloudinary.v2.uploader.upload(req.body.image,{
@@ -61,6 +48,7 @@ router.post('/addbanner',verifyToken,isadmin, asyncerror(async (req, res, next) 
         link:req.body.link,
         url:result.url,
         public_id:result.public_id,
+        page:req.body.page
     })
     res.status(200).send({ success: true, banner })
 
