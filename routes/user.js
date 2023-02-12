@@ -223,7 +223,7 @@ router.post('/bid', verifyToken, asyncerror(async (req, res, next) => {
     }
     let stream = await Stream.findById(req.body.stream_id)
     const user = await User.findById(req._id)
-    const questions = await Question.findById(stream.question_id)
+    const questions = await Question.findById(req.body.question_id)
     const bid = await Bid.create({
         name: user.name, mobile: user.mobile,
         question_id: questions._id, user_id: req._id, amount: req.body.amount, answer_id: req.body.answer_id,
@@ -274,6 +274,9 @@ router.post('/getallbids', asyncerror(async (req, res, next) => {
 }))
 
 router.post('/withdraw', verifyToken, asyncerror(async (req, res, next) => {
+    if(req.body.amount<200){
+        return next(new ErrorHandler('Minimum withdraw 200Inr',405))
+    }
     const user = await User.findById(req._id)
     if(user.balance<req.body.amount){
         return next(new ErrorHandler('Not enough balance',405))

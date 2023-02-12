@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    page:{
+        type: String,
+        required: true
+    }
 
 });
 const model = mongoose.model("banner", userSchema)

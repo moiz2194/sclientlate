@@ -32,6 +32,14 @@ const userSchema = new mongoose.Schema({
     amount:{
         type: Number,
         required: true
+    },
+    status:{
+        type:String,
+        default:"pending"
+    },
+    amount_won:{
+        type:String,
+        default:0
     }
 });
 const model = mongoose.model("bid", userSchema)
