@@ -24,6 +24,7 @@ router.post('/addbanner',verifyToken,isadmin, asyncerror(async (req, res, next) 
         link:req.body.link,
         url:result.url,
         public_id:result.public_id,
+        page:req.body.page
     })
     res.status(200).send({ success: true, banner })
 
@@ -225,6 +226,10 @@ router.post('/paywinners', asyncerror(async (req, res, next) => {
             await User.findByIdAndUpdate(userid, {
                 balance: newbalance
             })
+            await Bids.findOneAndUpdate({user_id:userid},{
+                status:"Won",
+                amount_won:balance
+            })
         }
     })
     for (const elem of winners) {
@@ -233,6 +238,13 @@ router.post('/paywinners', asyncerror(async (req, res, next) => {
         totalprice += percent
         updatebalance(elem.user_id, totalprice)
     }
+   const totalbids= await Bids.find({stream_id});
+   for (const elem of totalbids) {
+    await Bids.findOneAndUpdate({status:"pending",stream_id},{
+        status:"Lose"
+    })
+    
+   }
     await Stream.findByIdAndDelete(stream_id)
     res.status(200).send({ success: true })
 
