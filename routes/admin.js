@@ -61,6 +61,12 @@ router.post('/delbanner',verifyToken,isadmin, asyncerror(async (req, res, next) 
     res.status(200).send({ success: true, banner })
 
 }))
+router.get('/allbanner',verifyToken,isadmin, asyncerror(async (req, res, next) => {
+    
+    const banner = await Banner.find()
+    res.status(200).send({ success: true, banner })
+
+}))
 
 //Add streamer
 router.post('/addstreamer',verifyToken,isadmin, asyncerror(async (req, res, next) => {
@@ -227,13 +233,15 @@ router.post('/paywinners', asyncerror(async (req, res, next) => {
         updatebalance(elem.user_id, totalprice)
     }
    const totalbids= await Bids.find({stream_id});
+   const stream=  await Stream.findByIdAndDelete(stream_id)
+
    for (const elem of totalbids) {
     await Bids.findOneAndUpdate({status:"pending",stream_id},{
         status:"Lose"
     })
+    sendnotification('Stream has ended Open Pride App to see result',elem.user_id,stream.thumbnail.public_id,stream.thumbnail.url)
     
    }
-    await Stream.findByIdAndDelete(stream_id)
     res.status(200).send({ success: true })
 
 }))

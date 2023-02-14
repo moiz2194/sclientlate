@@ -18,10 +18,16 @@ const crypto = require('crypto');
 const {v4:uuid} = require('uuid');
 const Razorpay = require('razorpay')
 const Banner = require('../model/banners.js');
+const Notification=require('../model/notifications.js')
 
 //Updates
+router.get('/getallnotification',verifyToken, asyncerror(async (req, res, next) => {
+    const notification = await Notification.find({ $or: [{to: "all"}, {to: req._id}] });
 
+     res.status(200).send({ success: true, notification })
+ }))
 // 1 Favourites
+
 router.post('/addfavourite',verifyToken, asyncerror(async (req, res, next) => {
    const favourite=await Favourite.create({
     user_id:req._id,stream_id:req.body.stream_id
@@ -29,15 +35,15 @@ router.post('/addfavourite',verifyToken, asyncerror(async (req, res, next) => {
     res.status(200).send({ success: true, favourite })
 }))
 router.get('/getbannermain',verifyToken, asyncerror(async (req, res, next) => {
-   const banner=await Banner.findOne({page:"main"})
+   const banner=await Banner.find({page:"main"})
     res.status(200).send({ success: true, banner })
 }))
 router.get('/getbannersecond',verifyToken, asyncerror(async (req, res, next) => {
-   const banner=await Banner.findOne({page:"second"})
+   const banner=await Banner.find({page:"second"})
     res.status(200).send({ success: true, banner })
 }))
 router.get('/getbannerthird',verifyToken, asyncerror(async (req, res, next) => {
-   const banner=await Banner.findOne({page:"third"})
+   const banner=await Banner.find({page:"third"})
     res.status(200).send({ success: true, banner })
 }))
 router.get('/favourites',verifyToken, asyncerror(async (req, res, next) => {
@@ -64,7 +70,7 @@ router.get('/mystreams',verifyToken, asyncerror(async (req, res, next) => {
 router.post('/giftstreamer',verifyToken, asyncerror(async (req, res, next) => {
     const user=await User.findById(req._id);
     const streamer=await Streamer.findById(req.body.streamer_id)
-    const rank=streamer.rank+1
+    const rank=streamer.rank+10
     const newgifts=streamer.gifts
     newgifts.push({
         amount:req.body.amount,
@@ -247,10 +253,13 @@ router.post('/bid', verifyToken, asyncerror(async (req, res, next) => {
     trend:newtrend
    })
     //
-    const newrank=user.rank+1
+    const newrank=user.rank+5
     const newbalance=user.balance-bid.amount
     await User.findByIdAndUpdate(user._id,{
         balance:newbalance,
+        rank:newrank
+    })
+    await Streamer.findByIdAndUpdate(stream.streamer_id,{
         rank:newrank
     })
     res.status(200).send({ success: true, bid })
