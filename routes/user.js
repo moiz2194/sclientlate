@@ -314,7 +314,7 @@ router.post('/acceptdeposit', verifyToken,isadmin, asyncerror(async (req, res, n
     const user = await User.findById(req.body.userid)
     const history = await History.create({ mobile: user.mobile, name: user.name, amount: req.body.amount, type: "deposit", user_id: req.body.userid })
     let newbalance = user.balance + history.amount
-    await User.findByIdAndUpdate(req._id, {
+    await User.findByIdAndUpdate(req.body.userid, {
         balance: newbalance
     })
     await Depositreq.findByIdAndUpdate(req.body.id,{

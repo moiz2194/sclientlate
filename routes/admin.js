@@ -4,6 +4,7 @@ const asyncerror = require('../middlewares/catchasyncerror.js');
 const ErrorHandler = require('../middlewares/errorhandler');
 const jwt = require('jsonwebtoken');
 const User = require('../model/user.js')
+const Depositreq = require('../model/depositreq.js')
 const Stream = require('../model/stream.js')
 const Question = require('../model/question.js')
 const Category = require('../model/category.js')
@@ -123,7 +124,7 @@ router.post('/addstream', asyncerror(async (req, res, next) => {
 }))
 router.get('/deposit', verifyToken, asyncerror(async (req, res, next) => {
   
-    const requests=await Depositreq.find()
+    const requests=await Depositreq.find({status:"pending"}).populate('user_id','name mobile')
      res.status(200).send({ success: true, requests })
  }))
  
