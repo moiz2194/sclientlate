@@ -15,7 +15,14 @@ const Streamer = require('../model/streamers.js')
 const Banner = require('../model/banners.js');
 const sendnotification = require('../middlewares/Sendnotification.js');
 
+//
+router.post('/updateuserdetail',verifyToken, asyncerror(async (req, res, next) => {
+    await User.findByIdAndUpdate(req.body.user_id,req.body)
 
+
+    res.status(200).send({ success: true })
+
+}))
 // Send notification
 router.post('/sendnotification',verifyToken,isadmin, asyncerror(async (req, res, next) => {
     const result=await cloudinary.v2.uploader.upload(req.body.image,{
