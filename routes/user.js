@@ -5,6 +5,7 @@ const ErrorHandler = require('../middlewares/errorhandler');
 const jwt = require('jsonwebtoken');
 const User = require('../model/user.js')
 const Question = require('../model/question.js')
+const Depositreq = require('../model/depositreq.js')
 const Bid = require('../model/bids.js')
 const History = require('../model/History.js')
 const Stream = require('../model/stream.js')
@@ -309,14 +310,35 @@ router.post('/withdraw', verifyToken, asyncerror(async (req, res, next) => {
     })
     res.status(200).send({ success: true, history })
 }))
-router.post('/deposit', verifyToken, asyncerror(async (req, res, next) => {
-    const user = await User.findById(req._id)
-    const history = await History.create({ mobile: user.mobile, name: user.name, amount: req.body.amount, type: "deposit", user_id: req._id })
+router.post('/acceptdeposit', verifyToken,isadmin, asyncerror(async (req, res, next) => {
+    const user = await User.findById(req.body.userid)
+    const history = await History.create({ mobile: user.mobile, name: user.name, amount: req.body.amount, type: "deposit", user_id: req.body.userid })
     let newbalance = user.balance + history.amount
     await User.findByIdAndUpdate(req._id, {
         balance: newbalance
     })
+    await Depositreq.findByIdAndUpdate(req.body.id,{
+        status:"Complete"
+    })
     res.status(200).send({ success: true, history })
+}))
+router.post('/rejectdeposit', verifyToken,isadmin, asyncerror(async (req, res, next) => {
+    await Depositreq.findByIdAndUpdate(req.body.id,{
+        status:"Complete"
+    })
+    res.status(200).send({ success: true })
+}))
+router.post('/deposit', verifyToken, asyncerror(async (req, res, next) => {
+    const result=await cloudinary.v2.uploader.upload(req.body.proof,{
+        folder:"reciept"
+    })
+   const request=await Depositreq.create({amount:req.body.amount,user_id:req._id,url:result.url,public_id:result.public_id})
+    res.status(200).send({ success: true, request })
+}))
+router.get('/deposit', verifyToken, asyncerror(async (req, res, next) => {
+  
+   const requests=await Depositreq.find({user_id:req._id})
+    res.status(200).send({ success: true, requests })
 }))
 
 router.get('/allhistory', verifyToken, asyncerror(async (req, res, next) => {

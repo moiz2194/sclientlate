@@ -34,6 +34,20 @@ const userSchema = new mongoose.Schema({
     rank:{
         type:Number,
         default:0
+    },
+    account_Number:{
+        type:String
+    },
+    ifsc_code:{
+        type:String
+    }
+    ,
+    Branch:{
+        type:String
+    }
+    ,
+    Bank_Name:{
+        type:String
     }
 });
 const model = mongoose.model("alluser", userSchema)

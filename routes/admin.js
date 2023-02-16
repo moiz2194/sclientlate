@@ -114,7 +114,12 @@ router.post('/addstream', asyncerror(async (req, res, next) => {
     res.status(200).send({ success: true, stream })
 
 }))
-
+router.get('/deposit', verifyToken, asyncerror(async (req, res, next) => {
+  
+    const requests=await Depositreq.find()
+     res.status(200).send({ success: true, requests })
+ }))
+ 
 router.get('/allwithdrawspending', asyncerror(async (req, res, next) => {
 
     const withdraws = await History.find({ status: "pending", type: "withdraw" })
