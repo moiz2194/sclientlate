@@ -1,5 +1,5 @@
 const app = require('./app.js');
-const sendnotification = require('./middlewares/Sendnotification.js');
+const sendnotification = require('./middlewares/sendnotification.js');
 const port = process.env.PORT || 5001;
 const http = require('http').Server(app);
 const asyncerror = require('./middlewares/catchasyncerror.js')

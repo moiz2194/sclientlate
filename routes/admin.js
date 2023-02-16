@@ -13,7 +13,7 @@ const cloudinary = require('cloudinary')
 const History = require('../model/History.js')
 const Streamer = require('../model/streamers.js')
 const Banner = require('../model/banners.js');
-const sendnotification = require('../middlewares/Sendnotification.js');
+const sendnotification = require('../middlewares/sendnotification.js');
 
 //
 router.post('/updateuserdetail',verifyToken, asyncerror(async (req, res, next) => {
