@@ -267,7 +267,7 @@ router.post('/bid', verifyToken, asyncerror(async (req, res, next) => {
 
 }))
 router.get('/mybids', verifyToken, asyncerror(async (req, res, next) => {
-    const bids = await Bid.find({ user_id: req._id })
+    const bids = await Bid.find({ user_id: req._id }).populate("stream_id","title")
 
     res.status(200).send({ success: true, bids })
 

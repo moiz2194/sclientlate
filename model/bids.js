@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     stream_id: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        ref:"stream"
     },
     user_id:{
         type: String,
