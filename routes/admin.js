@@ -21,7 +21,7 @@ router.post('/sendnotification',verifyToken,isadmin, asyncerror(async (req, res,
     const result=await cloudinary.v2.uploader.upload(req.body.image,{
         folder:"notification"
     })
-   sendnotification('',req.body.message,'all',result.public_id,result.url)
+   sendnotification(req.body.message,'all',result.public_id,result.url)
     res.status(200).send({ success: true })
 
 }))
